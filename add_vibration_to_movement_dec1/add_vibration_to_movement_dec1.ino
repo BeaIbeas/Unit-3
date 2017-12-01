@@ -1,3 +1,5 @@
+#include "runningaverage.h"
+
 #define CHB_DIR 13 
 #define CHB_PWM 11 
 #define CHB_BRK 8
@@ -17,8 +19,15 @@
 #define LGT_THR_RGT_MIN 240 // right
 #define LGT_THR_RGT_MAX 990
 
+#define LDR_READ_EVERY_MS 200
+
 #define VIBRATION_PIN 5
 int motorB_speed = 0;
+
+RunningAverage avgL( (1000/LDR_READ_EVERY_MS)*10 );
+RunningAverage avgR( (1000/LDR_READ_EVERY_MS)*10 );
+
+int leftEye, rightEye;
 
 void init_motor() {
   pinMode(CHA_DIR, OUTPUT);
@@ -49,32 +58,41 @@ void setup() {
 
 void debug_text() {
   Serial.print("left sensor: ");
-  Serial.println(lightLeft);
+  Serial.println(leftEye);
   Serial.print("right sensor: ");
-  Serial.println(lightRight);
+  Serial.println(rightEye);
 }
 
 void debug_graph() {
-  Serial.print(lightLeft);
+  Serial.print(leftEye);
   Serial.print(",");
-  Serial.print(lightRight);
+  Serial.print(rightEye);
+  Serial.print(",");
+  Serial.print( avgL.getAverage() );
+  Serial.print(",");
+  Serial.println( avgR.getAverage() );
 }
 
 void loop() {
   //int lightRight = analogRead(LGT_SNS_RGT)/4; 
   //int lightLeft = analogRead(LGT_SNS_LFT)/4;
-  int lightRight = readEye(LGT_SNS_RGT); 
-  int lightLeft = readEye(LGT_SNS_LFT);
+
+  // first we read the value of the left eye, and we add that value to the average calculator
+  rightEye = readEye(LGT_SNS_RGT); 
+  avgR.addValue( rightEye );
+  
+  leftEye = readEye(LGT_SNS_LFT);
+  avgL.addValue( leftEye );
   
   debug_graph();
     
   // put your main code here, to run repeatedly:
-  analogWrite(CHB_PWM, mappedMotorValue(lightLeft, true)); //conect sensor value to direction
-  analogWrite(CHA_PWM, mappedMotorValue(lightRight, false));
-  if (lightRight > 400 || lightLeft > 400) { // when the room is really dark it should be around 400. Maximun is 1000.
+  analogWrite(CHB_PWM, mappedMotorValue(leftEye, true)); //conect sensor value to direction
+  analogWrite(CHA_PWM, mappedMotorValue(rightEye, false));
+  if (rightEye > 400 || leftEye > 400) { // when the room is really dark it should be around 400. Maximun is 1000.
     shake(true);
   }
-  else if (lightRight < 400 || lightLeft < 400) { // if there is no light stops vibrating
+  else if (rightEye < 400 || leftEye < 400) { // if there is no light stops vibrating
     shake(false);
   }
  
