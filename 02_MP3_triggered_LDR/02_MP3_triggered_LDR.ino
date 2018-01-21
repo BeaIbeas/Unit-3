@@ -1,10 +1,10 @@
 #include "Arduino.h"
 #include "SoftwareSerial.h"
-#include "DFRobotDFPlayerMini.h" //are this three libraries?????
+#include "DFRobotDFPlayerMini.h"
 
 SoftwareSerial mySoftwareSerial(10, 11); // RX, TX  what is this ????????????????????
 DFRobotDFPlayerMini myDFPlayer;
-void printDetail(uint8_t type, int value); // why a void starts here ?????????
+void printDetail(uint8_t type, int value); 
 
 int flexPin1 = 0;
 int flexPin2 = 1;
